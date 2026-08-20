@@ -1,0 +1,9 @@
+# Manipulação de dados
+pandas==3.0.3
+numpy
+
+# Logging
+loguru==0.7.3
+
+# Encoding
+chardet==7.4.3
