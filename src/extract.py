@@ -5,11 +5,7 @@ import chardet
 import pandas as pd
 from loguru import logger
 
-try:
-    from .config import DATA_BRONZE_PATH, ENCODINGS
-except ImportError:  # fallback para execução como script
-    from config import DATA_BRONZE_PATH, ENCODINGS
-
+from config import DATA_BRONZE_PATH, ENCODINGS
 
 # ============================================================
 # Extração de dados
@@ -43,20 +39,22 @@ def detectar_encoding(file_path: Path, amostra_bytes: int = 50_000) -> str:
 
 
 def tentar_ler_com_separador(file_path: Path, encoding: str, sep: str) -> pd.DataFrame | None:
-    try:
-        df = pd.read_csv(
-            file_path,
-            sep=sep,
-            encoding=encoding,
-            engine="python",
-            low_memory=False,
-            keep_default_na=False,
-        )
-        if df.shape[1] <= 1:
-            return None
-        return df
-    except Exception:
-        return None
+    for engine in ("c", "python"):
+        try:
+            df = pd.read_csv(
+                file_path,
+                sep=sep,
+                encoding=encoding,
+                engine=engine,
+                keep_default_na=False,
+            )
+            if df.shape[1] <= 1:
+                continue
+            return df
+        except Exception:
+            continue
+
+    return None
 
 
 def ler_arquivo_csv(file_path: Path) -> pd.DataFrame | None:
