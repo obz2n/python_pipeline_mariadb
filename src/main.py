@@ -2,9 +2,14 @@ import sys
 
 from loguru import logger
 
-from config import DATA_BRONZE_PATH
-from extract import extrair_dados_bronze
-from logger_config import setup_logger
+try:
+    from .config import DATA_BRONZE_PATH
+    from .extract import extrair_dados_bronze
+    from .logger_config import setup_logger
+except ImportError:  # pragma: no cover - fallback para execução direta
+    from config import DATA_BRONZE_PATH
+    from extract import extrair_dados_bronze
+    from logger_config import setup_logger
 
 # ============================================================================
 # Pipeline Final
@@ -20,6 +25,9 @@ def main():
     1. Extrai os dados CSV da pasta bronze.
     2. Registra um resumo da extração.
     """
+    # ===========================================================================
+    # Etapa de extração de dados
+    # ===========================================================================
     try:
         logger.info("Iniciando pipeline...")
         dataframes = extrair_dados_bronze()

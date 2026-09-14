@@ -5,6 +5,10 @@ from pathlib import Path
 # ========================
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_BRONZE_PATH = BASE_DIR / "data"
+ALUNO_DATA_BRONZE_PATH = DATA_BRONZE_PATH
+ESCOLA_DATA_BRONZE_PATH = DATA_BRONZE_PATH
+ITEM_DATA_BRONZE_PATH = DATA_BRONZE_PATH
+
 LOG_PATH = BASE_DIR / "logs"
 
 # ========================

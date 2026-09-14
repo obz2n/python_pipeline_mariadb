@@ -1,5 +1,9 @@
 import pandas as pd
-from extract import extrair_dados_bronze
+
+try:
+    from .extract import extrair_dados_bronze
+except ImportError:  # pragma: no cover - fallback para execução direta
+    from extract import extrair_dados_bronze
 
 def ler_datraframe_csv(file_path: str, encoding: str = "utf-8") -> pd.DataFrame:
     """

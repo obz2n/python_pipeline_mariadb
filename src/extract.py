@@ -5,7 +5,22 @@ import chardet
 import pandas as pd
 from loguru import logger
 
-from config import DATA_BRONZE_PATH, ENCODINGS
+try:
+    from .config import (
+        ALUNO_DATA_BRONZE_PATH,
+        DATA_BRONZE_PATH,
+        ESCOLA_DATA_BRONZE_PATH,
+        ITEM_DATA_BRONZE_PATH,
+        ENCODINGS,
+    )
+except ImportError:  # pragma: no cover - fallback para execução direta
+    from config import (
+        ALUNO_DATA_BRONZE_PATH,
+        DATA_BRONZE_PATH,
+        ESCOLA_DATA_BRONZE_PATH,
+        ITEM_DATA_BRONZE_PATH,
+        ENCODINGS,
+    )
 
 # ============================================================
 # Extração de dados
@@ -88,21 +103,36 @@ def ler_arquivo_csv(file_path: Path) -> pd.DataFrame | None:
 
 def extrair_dados_bronze() -> dict[str, pd.DataFrame]:
     """
-    Extrai dados de todos os arquivos CSV na pasta DATA_BRONZE_PATH.
-    Retorna um dicionário com o nome do arquivo como chave e o DataFrame como valor.
+    Extrai os dados de aluno, escola e item em 3 DataFrames distintos.
+    Cada chave do dicionário representa uma categoria consolidada dos CSVs.
     """
-    data_dir = Path(DATA_BRONZE_PATH)
+    dataframes = {"aluno": [], "escola": [], "item": []}
+
+    data_dir = DATA_BRONZE_PATH
     if not data_dir.exists():
-        data_dir = Path(__file__).resolve().parent.parent / "data"
+        logger.warning(f"  ⚠️ Pasta não encontrada: {data_dir}")
+        return {"aluno": pd.DataFrame(), "escola": pd.DataFrame(), "item": pd.DataFrame()}
 
     logger.info(f"Extraindo dados da pasta: {data_dir}")
-    dataframes = {}
     for file_name in sorted(os.listdir(data_dir)):
-        if file_name.endswith(".csv"):
-            file_path = data_dir / file_name
-            df = ler_arquivo_csv(file_path)
-            if df is not None:
-                dataframes[file_name] = df
-            else:
-                logger.warning(f"  ⚠️ Falha ao ler: {file_name}")
-    return dataframes
+        if not file_name.endswith(".csv"):
+            continue
+
+        file_path = data_dir / file_name
+        df = ler_arquivo_csv(file_path)
+        if df is None:
+            logger.warning(f"  ⚠️ Falha ao ler: {file_name}")
+            continue
+
+        if "TS_ALUNO" in file_name:
+            dataframes["aluno"].append(df)
+        elif "TS_ESCOLA" in file_name:
+            dataframes["escola"].append(df)
+        elif "TS_ITEM" in file_name:
+            dataframes["item"].append(df)
+
+    return {
+        "aluno": pd.concat(dataframes["aluno"], ignore_index=True) if dataframes["aluno"] else pd.DataFrame(),
+        "escola": pd.concat(dataframes["escola"], ignore_index=True) if dataframes["escola"] else pd.DataFrame(),
+        "item": pd.concat(dataframes["item"], ignore_index=True) if dataframes["item"] else pd.DataFrame(),
+    }
