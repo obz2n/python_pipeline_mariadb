@@ -2,14 +2,9 @@ import sys
 
 from loguru import logger
 
-try:
-    from .config import DATA_BRONZE_PATH
-    from .extract import extrair_dados_bronze
-    from .logger_config import setup_logger
-except ImportError:  # pragma: no cover - fallback para execução direta
-    from config import DATA_BRONZE_PATH
-    from extract import extrair_dados_bronze
-    from logger_config import setup_logger
+from config import DATA_BRONZE_PATH
+from extract import extrair_dados_bronze
+from logger_config import setup_logger
 
 # ============================================================================
 # Pipeline Final
@@ -30,10 +25,11 @@ def main():
     # ===========================================================================
     try:
         logger.info("Iniciando pipeline...")
-        dataframes = extrair_dados_bronze()
-        logger.info(f"Arquivos extraídos: {len(dataframes)}")
-        for nome, df in dataframes.items():
-            logger.info(f"- {nome}: {len(df)} linhas x {len(df.columns)} colunas")
+        df = extrair_dados_bronze()
+        if df is None or df.empty:
+            logger.warning("Nenhum dado extraído.")
+        else:
+            logger.info(f"Dados extraídos: {len(df)} linhas x {len(df.columns)} colunas")
     except Exception as e:
         logger.error(f"Erro no pipeline: {e}")
         sys.exit(1)
