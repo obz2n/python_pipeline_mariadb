@@ -1,24 +1,16 @@
 import unittest
 
+from src.config import DATA_BRONZE_PATH
 from src.extract import extrair_dados_bronze
 
 
 class ExtractTests(unittest.TestCase):
-    def test_extrair_dados_bronze_ler_todos_os_csv(self):
-        dataframes = extrair_dados_bronze()
+    def test_extrair_dados_bronze_ler_csv_configurado(self):
+        dataframe = extrair_dados_bronze(DATA_BRONZE_PATH)
 
-        self.assertEqual(set(dataframes.keys()), {"aluno", "escola", "item"})
-
-        self.assertIn("aluno", dataframes)
-        self.assertIn("escola", dataframes)
-        self.assertIn("item", dataframes)
-
-        self.assertGreater(len(dataframes["aluno"].columns), 1)
-        self.assertGreater(len(dataframes["aluno"]), 0)
-        self.assertGreater(len(dataframes["escola"].columns), 1)
-        self.assertGreater(len(dataframes["escola"]), 0)
-        self.assertGreater(len(dataframes["item"].columns), 1)
-        self.assertGreater(len(dataframes["item"]), 0)
+        self.assertIsNotNone(dataframe)
+        self.assertGreater(len(dataframe.columns), 1)
+        self.assertGreater(len(dataframe), 0)
 
 
 if __name__ == "__main__":

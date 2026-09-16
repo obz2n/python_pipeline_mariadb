@@ -3,10 +3,7 @@ from pathlib import Path
 
 from loguru import logger
 
-try:
-    from .config import LOG_PATH
-except ImportError:  # fallback para execução como script
-    from config import LOG_PATH
+from config import LOG_PATH
 
 def setup_logger():
     # ============================================================

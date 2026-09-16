@@ -5,7 +5,7 @@ import chardet
 import pandas as pd
 from loguru import logger
 
-from config import DATA_BRONZE_PATH, ENCODINGS
+from config import ENCODINGS
 
 # ============================================================
 # Extração de dados
@@ -86,13 +86,20 @@ def ler_arquivo_csv(file_path: Path) -> pd.DataFrame | None:
     return None
 
 
-def extrair_dados_bronze() -> dict[str, pd.DataFrame]:
+def extrair_dados_bronze(file_path: str | Path) -> pd.DataFrame | None:
     """
     Extrai os dados da base de dados bronze.
-    Retornar um dataframe
+    Retorna um DataFrame contendo os dados extraídos da base bronze, ou None se o
+    arquivo não existir ou não puder ser lido.
     """
     logger.info("Extraindo dados da base de dados bronze...")
-    if not DATA_BRONZE_PATH.exists():
-        logger.warning(f"  ⚠️ Arquivo não encontrado: {DATA_BRONZE_PATH}")
-        return pd.DataFrame()
-    return ler_arquivo_csv(DATA_BRONZE_PATH)
+    if not file_path:
+        logger.warning("  Caminho do arquivo não fornecido.")
+        return None
+
+    path = Path(file_path)
+    if not path.is_file():
+        logger.warning(f"  Arquivo não encontrado: {path}")
+        return None
+
+    return ler_arquivo_csv(path)

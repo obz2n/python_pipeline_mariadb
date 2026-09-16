@@ -3,9 +3,9 @@ from pathlib import Path
 # ========================
 # Diretórios
 # ========================
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_BRONZE_PATH = '../data/Google_Ads_Dataset.csv'
-LOG_PATH = BASE_DIR / "logs"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_BRONZE_PATH = PROJECT_ROOT / "data" / "Google_Ads_Dataset.csv"
+LOG_PATH = PROJECT_ROOT / "logs"
 
 # ========================
 # Banco de dados

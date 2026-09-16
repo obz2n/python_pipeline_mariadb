@@ -25,7 +25,7 @@ def main():
     # ===========================================================================
     try:
         logger.info("Iniciando pipeline...")
-        df = extrair_dados_bronze()
+        df = extrair_dados_bronze(DATA_BRONZE_PATH)
         if df is None or df.empty:
             logger.warning("Nenhum dado extraído.")
         else:
