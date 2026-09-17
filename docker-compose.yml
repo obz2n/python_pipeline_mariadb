@@ -4,10 +4,10 @@ services:
     container_name: my-mariadb
     restart: always
     environment:
-      MARIADB_USER: obz2n
-      MARIADB_PASSWORD: obz2n1234
-      MARIADB_DATABASE: database
-      MARIADB_ROOT_PASSWORD: root1234
+      MARIADB_USER: ${MARIADB_USER:?MARIADB_USER não configurado}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?MARIADB_PASSWORD não configurado}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-${MARIADB_DB:?MARIADB_DATABASE ou MARIADB_DB não configurado}}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-${MARIADB_PASSWORD:?MARIADB_PASSWORD não configurado}}
     volumes:
       - "./mariadb-data:/var/lib/mysql"
     ports:

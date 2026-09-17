@@ -17,15 +17,23 @@ load_dotenv(dotenv_path=env_path)
 
 logger.debug(f"Carregando variáveis de ambiente de: {env_path}")
 
+
+def _obter_variavel_obrigatoria(nome: str) -> str:
+    valor = os.getenv(nome)
+    if not valor:
+        raise RuntimeError(f"Variável de ambiente obrigatória ausente: {nome}")
+    return valor
+
+
 def conectar_mariadb() -> Engine:
     """
     Conecta ao banco de dados MariaDB usando variáveis de ambiente.
     Retorna uma engine SQLAlchemy.
     """
-    user = os.getenv("MARIADB_USER", "obz2n")
-    password = os.getenv("MARIADB_PASSWORD", "obz2n1234")
+    user = _obter_variavel_obrigatoria("MARIADB_USER")
+    password = _obter_variavel_obrigatoria("MARIADB_PASSWORD")
     host = os.getenv("MARIADB_HOST", "127.0.0.1")
-    database = os.getenv("MARIADB_DATABASE", os.getenv("MARIADB_DB", "database"))
+    database = os.getenv("MARIADB_DATABASE") or _obter_variavel_obrigatoria("MARIADB_DB")
     port = int(os.getenv("MARIADB_PORT", "3306"))
 
     url = URL.create(
@@ -40,9 +48,12 @@ def conectar_mariadb() -> Engine:
     logger.info("Engine MariaDB criada para {}:{}/{}", host, port, database)
     return engine
 
-# Log de debug
 logger.debug(
-    f"DB_USER={os.getenv('MARIADB_USER')}, HOST={os.getenv('MARIADB_HOST')}, PORT={os.getenv('MARIADB_PORT')}, DATABASE={os.getenv('MARIADB_DATABASE')}, SCHEMA={os.getenv('MARIADB_SCHEMA')}, DB_DIALECT=mysql+mysqldb"
+    "Configuração MariaDB carregada: host={}, port={}, database={}, "
+    "user=***, password=***, dialect=mysql+pymysql",
+    os.getenv("MARIADB_HOST", "127.0.0.1"),
+    os.getenv("MARIADB_PORT", "3306"),
+    os.getenv("MARIADB_DATABASE") or os.getenv("MARIADB_DB", "***"),
 )
 
 def carregar_dados(
