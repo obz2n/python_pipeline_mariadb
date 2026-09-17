@@ -7,3 +7,10 @@ loguru==0.7.3
 
 # Encoding
 chardet==7.4.3
+
+# Banco de dados
+sqlalchemy==2.0.54
+PyMySQL==1.1.1
+
+# Variáveis de ambiente
+python-dotenv==1.2.3

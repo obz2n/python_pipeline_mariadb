@@ -1,30 +1,77 @@
 import pandas as pd
 
-try:
-    from .extract import extrair_dados_bronze
-except ImportError:  # pragma: no cover - fallback para execução direta
-    from extract import extrair_dados_bronze
 
-def ler_datraframe_csv(file_path: str, encoding: str = "utf-8") -> pd.DataFrame:
-    """
-    Lê um arquivo CSV e retorna um DataFrame.
-    """
-    try:
-        df = pd.read_csv(file_path, encoding=encoding)
-        return df
-    except Exception as e:
-        print(f"Erro ao ler o arquivo {file_path}: {e}")
-        return pd.DataFrame()  # Retorna um DataFrame vazio em caso de erro
+REQUIRED_COLUMNS = {
+    "Cost",
+    "Sale_Amount",
+    "Location",
+    "Device",
+    "Ad_Date",
+}
+
 
 def transformar_dados(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Aplica transformações nos dados do DataFrame.
-    Exemplo: renomear colunas, filtrar linhas, etc.
+    Limpa valores monetários, localidades, dispositivos e datas.
+
+    Retorna uma cópia para que o DataFrame da etapa de extração não seja
+    alterado por efeitos colaterais.
     """
-    # Exemplo de transformação: renomear colunas para minúsculas
-    df.columns = [col.lower() for col in df.columns]
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("df deve ser um pandas.DataFrame")
 
-    # Exemplo de transformação: remover linhas com valores nulos
-    df = df.dropna()
+    missing_columns = REQUIRED_COLUMNS.difference(df.columns)
+    if missing_columns:
+        missing = ", ".join(sorted(missing_columns))
+        raise ValueError(f"Colunas obrigatórias ausentes: {missing}")
 
-    return df
+    transformed = df.copy()
+
+    for column in ("Cost", "Sale_Amount"):
+        raw_values = transformed[column].astype("string")
+        cleaned_values = raw_values.str.replace(r"[^0-9.,-]", "", regex=True)
+        cleaned_values = cleaned_values.str.replace(",", "", regex=False)
+        transformed[column] = pd.to_numeric(cleaned_values, errors="coerce")
+        invalid_values = raw_values.notna() & cleaned_values.ne("") & transformed[column].isna()
+        if invalid_values.any():
+            raise ValueError(f"Valores inválidos na coluna {column}")
+
+    location_values = transformed["Location"].astype("string").str.strip().str.lower()
+
+    ajustar = {
+        "bengluru": "Bangalore",
+        "benglore": "Bangalore",
+        "bangalore": "Bangalore",
+        "bengaluru": "Bangalore",
+        "mumbay": "Mumbai",
+        "mumabi": "Mumbai",
+        "mumbai": "Mumbai",
+        "bombay": "Mumbai",
+        "dheli": "Delhi",
+        "delhi": "Delhi",
+        "newdlhi": "New Delhi",
+        "new delhi": "New Delhi",
+        "chnnai": "Chennai",
+        "madras": "Chennai",
+        "chenay": "Chennai",
+        "chennai": "Chennai",
+        "poona": "Pune",
+        "punea": "Pune",
+        "punr": "Pune",
+        "pune": "Pune",
+    }
+
+    transformed["Location"] = location_values.replace(ajustar)
+    transformed["Device"] = (
+        transformed["Device"].astype("string").str.strip().str.lower().str.capitalize()
+    )
+
+    raw_dates = transformed["Ad_Date"].astype("string")
+    transformed["Ad_Date"] = pd.to_datetime(
+        raw_dates, format="mixed", dayfirst=True, errors="coerce"
+    )
+    invalid_dates = raw_dates.notna() & raw_dates.ne("") & transformed["Ad_Date"].isna()
+    if invalid_dates.any():
+        raise ValueError("Valores inválidos na coluna Ad_Date")
+
+    return transformed

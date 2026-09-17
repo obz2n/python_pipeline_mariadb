@@ -5,7 +5,10 @@ import chardet
 import pandas as pd
 from loguru import logger
 
-from config import ENCODINGS
+try:
+    from .config import ENCODINGS
+except ImportError:
+    from config import ENCODINGS
 
 # ============================================================
 # Extração de dados

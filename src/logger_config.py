@@ -3,7 +3,10 @@ from pathlib import Path
 
 from loguru import logger
 
-from config import LOG_PATH
+try:
+    from .config import LOG_PATH
+except ImportError:
+    from config import LOG_PATH
 
 def setup_logger():
     # ============================================================

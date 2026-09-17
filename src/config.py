@@ -10,8 +10,8 @@ LOG_PATH = PROJECT_ROOT / "logs"
 # ========================
 # Banco de dados
 # ========================
-SCHEMA_NAME_BRONZE = "staging"
-TABLE_NAME_BRONZE = "stg_"
+SCHEMA_NAME_BRONZE = None
+TABLE_NAME_BRONZE = "stg_google_ads"
 PATTERN_CSV = "*.csv"
 PATTERN_TXT = "*.txt"
 PATTERN_PARQUET = "*.parquet"

@@ -2,9 +2,18 @@ import sys
 
 from loguru import logger
 
-from config import DATA_BRONZE_PATH
-from extract import extrair_dados_bronze
-from logger_config import setup_logger
+try:
+    from .config import DATA_BRONZE_PATH, SCHEMA_NAME_BRONZE, TABLE_NAME_BRONZE
+    from .extract import extrair_dados_bronze
+    from .load import carregar_dados
+    from .transform import transformar_dados
+    from .logger_config import setup_logger
+except ImportError:
+    from config import DATA_BRONZE_PATH, SCHEMA_NAME_BRONZE, TABLE_NAME_BRONZE
+    from extract import extrair_dados_bronze
+    from load import carregar_dados
+    from transform import transformar_dados
+    from logger_config import setup_logger
 
 # ============================================================================
 # Pipeline Final
@@ -19,6 +28,8 @@ def main():
     Função principal do pipeline.
     1. Extrai os dados CSV da pasta bronze.
     2. Registra um resumo da extração.
+    3. Transforma os dados extraídos.
+    4. Carrega os dados transformados no MariaDB.
     """
     # ===========================================================================
     # Etapa de extração de dados
@@ -33,7 +44,30 @@ def main():
     except Exception as e:
         logger.error(f"Erro no pipeline: {e}")
         sys.exit(1)
-
-
+    # ===========================================================================
+    # Etapa de transformação de dados
+    # ===========================================================================
+    try:
+        if df is None or df.empty:
+            logger.warning("Pipeline interrompido: não há dados para transformar")
+            return
+        df = transformar_dados(df)
+        logger.info(f"Dados transformados: {len(df)} linhas x {len(df.columns)} colunas")
+    except Exception as e:
+        logger.error(f"Erro na transformação de dados: {e}")
+        sys.exit(1)
+    # ===========================================================================
+    # Etapa de carregamento de dados
+    # ===========================================================================
+    try:
+        carregar_dados(
+            df,
+            tabela=TABLE_NAME_BRONZE,
+            schema=SCHEMA_NAME_BRONZE,
+        )
+    except Exception as e:
+        logger.error(f"Erro no carregamento do MariaDB: {e}")
+        sys.exit(1)
+    logger.info("Pipeline concluído com sucesso.")
 if __name__ == "__main__":
     main()
