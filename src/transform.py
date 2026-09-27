@@ -7,6 +7,7 @@ REQUIRED_COLUMNS = {
     "Location",
     "Device",
     "Ad_Date",
+    "Campaign_Name",
 }
 
 
@@ -37,6 +38,16 @@ def transformar_dados(df: pd.DataFrame) -> pd.DataFrame:
             raise ValueError(f"Valores inválidos na coluna {column}")
 
     location_values = transformed["Location"].astype("string").str.strip().str.lower()
+
+    campaign_name_values = transformed["Campaign_Name"].astype("string").str.strip().str.lower()
+    campaign_name_values = campaign_name_values.str.replace("101", "", regex=False)
+    campaign_name_values = campaign_name_values.str.replace("@", "a", regex=False)
+    campaign_name_values = campaign_name_values.str.replace("3", "e", regex=False)
+    campaign_name_values = campaign_name_values.str.replace("0", "o", regex=False)
+    campaign_name_values = campaign_name_values.str.replace("1", "", regex=False)
+    campaign_name_values = campaign_name_values.str.replace("_", "", regex=False)
+    campaign_name_values = campaign_name_values.str.replace(r"[^a-z0-9\s]", "", regex=True)
+    transformed["Campaign_Name"] = campaign_name_values.str.replace(r"\s+", " ", regex=True)
 
     ajustar = {
         "bengluru": "Bangalore",
@@ -73,5 +84,4 @@ def transformar_dados(df: pd.DataFrame) -> pd.DataFrame:
     invalid_dates = raw_dates.notna() & raw_dates.ne("") & transformed["Ad_Date"].isna()
     if invalid_dates.any():
         raise ValueError("Valores inválidos na coluna Ad_Date")
-
     return transformed

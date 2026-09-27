@@ -16,6 +16,7 @@ class TransformLoadTests(unittest.TestCase):
                 "Location": [" bengluru "],
                 "Device": ["mobile"],
                 "Ad_Date": ["20-11-2024"],
+                "Campaign_Name": ["AI_Marketing101_Machin3Learning@"],
             }
         )
 
@@ -25,7 +26,10 @@ class TransformLoadTests(unittest.TestCase):
         self.assertEqual(transformed.loc[0, "Sale_Amount"], 100.0)
         self.assertEqual(transformed.loc[0, "Location"], "Bangalore")
         self.assertEqual(transformed.loc[0, "Device"], "Mobile")
-        self.assertEqual(str(transformed.loc[0, "Ad_Date"].date()), "2024-11-20")
+        self.assertEqual(transformed["Ad_Date"].iloc[0], pd.Timestamp("2024-11-20"))
+        self.assertEqual(
+            transformed.loc[0, "Campaign_Name"], "aimarketingmachinelearninga"
+        )
         self.assertEqual(original.loc[0, "Cost"], "$10.50")
 
     def test_carregar_dados_grava_em_transacao(self):
