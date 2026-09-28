@@ -29,3 +29,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    hostname: metabase
+    volumes:
+      - "./metabase-data:/metabase-data"
+    environment:
+      MB_DB_FILE: /metabase-data/metabase.db
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
