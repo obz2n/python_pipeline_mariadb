@@ -3,7 +3,8 @@ from typing import Literal
 from pathlib import Path
 from dotenv import load_dotenv
 import pandas as pd
-from sqlalchemy import URL, Engine, create_engine
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine, URL
 from loguru import logger
 
 # Procurar .env na raiz do projeto (pai do diretório src/)

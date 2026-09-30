@@ -1,4 +1,19 @@
 services:
+  airflow-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow}
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   db:
     image: mariadb:11.4
     container_name: my-mariadb
@@ -44,3 +59,68 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  airflow-init:
+    &airflow-common
+    build:
+      context: .
+      dockerfile: dags/Dockerfile
+    image: python-pipeline-airflow:2.10.5
+    restart: "no"
+    env_file:
+      - .env
+    environment: &airflow-environment
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      PYTHONPATH: /opt/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:${AIRFLOW_DB_PASSWORD:-airflow}@airflow-db/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_WEBSERVER_SECRET_KEY:-local-only-change-me}
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY:-}
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USER:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-local-airflow-admin}
+      MARIADB_HOST: db
+    volumes: &airflow-volumes
+      - ./dags:/opt/airflow/dags:ro
+      - ./src:/opt/airflow/src:ro
+      - ./data:/opt/airflow/data:ro
+      - airflow-logs:/opt/airflow/logs
+    user: "${AIRFLOW_UID:-50000}:0"
+    depends_on:
+      airflow-db:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    command: version
+
+  airflow-webserver:
+    <<: *airflow-common
+    restart: unless-stopped
+    environment:
+      <<: *airflow-environment
+      _AIRFLOW_DB_MIGRATE: "false"
+      _AIRFLOW_WWW_USER_CREATE: "false"
+    command: webserver
+    ports:
+      - "127.0.0.1:8081:8080"
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    restart: unless-stopped
+    environment:
+      <<: *airflow-environment
+      _AIRFLOW_DB_MIGRATE: "false"
+      _AIRFLOW_WWW_USER_CREATE: "false"
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  airflow-db-data:
+  airflow-logs:
